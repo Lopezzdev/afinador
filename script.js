@@ -42,7 +42,7 @@ function leerFrecuencia(buf, sampleRate) {
   rms = Math.sqrt(rms / SIZE); //Hace la raiz cuadrada de la suma total
   if (rms < 0.01) {frecuencia=0;return;}
 
-  let r1 = 0, r2 = SIZE - 1, threshold = 0.2;
+  let r1 = 0, r2 = SIZE - 1, threshold = 0;
   for (let i = 0; i < SIZE / 2; i++) {  //Recorre la mitad del buffer
     if (Math.abs(buf[i]) > threshold) { 
       r1 = i;
@@ -106,12 +106,13 @@ let arrayFrecuencias=new Array(largoArray).fill(0);
 let arrayNotas=new Array(largoArray).fill(0); 
 
 let arrayFiltrado = new Array(largoArray).fill(0);
-let precisionFiltro=20,largoFiltro=10;
+// let precisionFiltro=40,largoFiltro=8;
+let precisionFiltro=40,largoFiltro=8;
 let notaOK,k;
 let notasPrevias=new Array(largoFiltro).fill(0);
 
 let arraySuavizado=new Array(largoArray).fill(0);
-let suavizado=8,auxSuavizado=0,conteoAux=0,boolAux=false;
+let suavizado=5,auxSuavizado=0,conteoAux=0,boolAux=false;
 
 function crearArrays(){
   
@@ -200,8 +201,9 @@ function graficarFrecuencias(){
 
 const canvas3 = document.querySelector("#grafico3");
 const ctx3 = canvas3.getContext("2d");
+ctx3.lineCap = "round";
 
-let sonidoON;
+let sonidoON,notaAux,afinadoAux,trigger1,aux1;
 
 let semitonos=[0,3,5,7,10,12,15,17,19,22,24,27,29,31,34,36]
 
@@ -216,9 +218,22 @@ function graficarNotas(){
   for(i=0;i<=37;i++){
     if(semitonos.includes(i)){ctx3.strokeStyle = "rgb(51, 51, 51)";}
     else{ctx3.strokeStyle = "rgb(82, 82, 82)";}
+    if(i==9||i==21||i==33)ctx3.strokeStyle="rgb(119, 119, 119)";
     ctx3.beginPath();
     ctx3.moveTo(0,740-i*20);
     ctx3.lineTo(1024,740-i*20);
+    ctx3.stroke();
+  }
+
+  //Dibujar iluminacion piano
+  ctx3.lineWidth = 6;
+
+  ctx3.strokeStyle = "rgba(0, 0, 0, 0.4)";
+  // ctx3.strokeStyle = "red";
+  for(i=0;i<=37;i++){
+    ctx3.beginPath();
+    ctx3.moveTo(0,740-i*20+11);
+    ctx3.lineTo(1024,740-i*20+11);
     ctx3.stroke();
   }
 
@@ -236,31 +251,51 @@ function graficarNotas(){
     if(arraySuavizado[i]!=0&&!sonidoON){sonidoON=true;ctx3.beginPath();}
     if(arraySuavizado[i]==0&&sonidoON){sonidoON=false;ctx3.stroke();}
 
-    if(sonidoON){ctx3.lineTo(i,arraySuavizado[i]+15);}
+    if(sonidoON){ctx3.lineTo(i,arraySuavizado[i]+7);}
 
   }
 
   //Dibujar histórico de notas
-
-  ctx3.strokeStyle = "rgb(194, 124, 45)";
   ctx3.lineWidth = 6;
+  ctx3.strokeStyle = "rgb(109, 218, 76)"; 
 
   ctx3.beginPath();
-
   ctx3.moveTo(0,arraySuavizado[0]);
 
+  // if(aux1!=0)console.log(aux1);
+
   for(i=0;i<largoArray;i++){
+
+    aux1=Math.round(arraySuavizado[i])%20;
+    afinadoAux=aux1<5||aux1>15;
+
+    if(!trigger1&&afinadoAux){
+      trigger1=true;
+      ctx3.stroke();      
+      ctx3.strokeStyle="rgb(109, 218, 76)";
+      ctx3.beginPath();
+      ctx3.moveTo(i,arraySuavizado[i]);
+    }
+    if(trigger1&&!afinadoAux){
+      trigger1=false;
+      ctx3.stroke();
+      ctx3.strokeStyle="rgb(218, 76, 76)";
+      ctx3.beginPath();
+      ctx3.moveTo(i,arraySuavizado[i]);
+    }
 
     if(arraySuavizado[i]!=0&&!sonidoON){sonidoON=true;ctx3.beginPath();}
     if(arraySuavizado[i]==0&&sonidoON){sonidoON=false;ctx3.stroke();}
 
     if(sonidoON){ctx3.lineTo(i,arraySuavizado[i]);}
 
-  }
-  
+  }  
+
+  ctx3.stroke();
+
   //Muestreo de la nota
-  let nota=17.32*Math.log(arrayNotas[0])-75.4;
-  if(nota>0&&nota<37)document.querySelector("#nota").innerHTML=nombres[Math.round(nota-1)];
+  notaAux=Math.round(arraySuavizado[0]/20);
+  if(notaAux>0&&notaAux<37)document.querySelector("#nota").innerHTML=nombres[36-notaAux];
   else document.querySelector("#nota").innerHTML="-";
 
 }

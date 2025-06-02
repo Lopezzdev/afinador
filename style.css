@@ -45,7 +45,7 @@ html{
     border:solid 1px  rgb(194, 124, 45);
     position: absolute;
     top:0px;
-    right: -103px;
+    right: -101px;
 }
 #barra{
     width: 5px;
@@ -66,10 +66,6 @@ html{
 #grafico{
     margin-top:40px;
     border:1px grey solid;
-}
-
-#grafico3{
-    border:1px rgb(92, 92, 92) solid;
 }
 
 canvas{
